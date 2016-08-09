@@ -101,7 +101,7 @@ var app = {
         usr += message.username[i];
       }
     }
-    $('#chats').prepend('<div class="chat ' + app.roomName  + ' ' + this.removeSpaces(message.username) +'"><span class = username>' +  window.escapeHtml(message.username) + '</span> <span class = message>' + window.escapeHtml(message.text) + '</span><span>' + window.escapeHtml(message.roomname) + '</span></div>');
+    $('#chats').prepend('<div class="chat ' + app.roomName  + ' ' + this.removeSpaces(message.username) +'"><span class = username>' +  window.escapeHtml(message.username) + '</span> <span class = message>' + window.escapeHtml(message.text) + '</span></div>');
   },
   addRoom: function(room) {
     return $('#roomSelect').append(`<div class=room> ${room} </div>`);
