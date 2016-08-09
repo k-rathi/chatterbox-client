@@ -18,9 +18,13 @@
       <h1>chatterbox</h1>
       <!-- Your HTML goes here! -->
     </div>
-    <form action="#" id="send" method="post">
+    <div id = 'roomSelect'>
+      <select id = 'roomNameList'>
+      </select>
+    </div>
+    <form id="submit" method="post">
       <input type="text" name="message" id="message"/>
-      <input type="submit" name="submit" class="submit"/>
+      <button id="btnSubmit">Send</button>
     </form>
     <div id="chats"></div>
 

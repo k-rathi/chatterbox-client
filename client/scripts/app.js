@@ -1,22 +1,56 @@
 // YOUR CODE HERE:
-
+$(document).ready(function() {
+  userName = window.location.href.split('=')[1];
+  $("#btnSubmit").click(function() {
+    console.log(this);
+    app.send({ 'username': userName, 'text': $('#message').val(), 'roomname': app.roomName});
+    $('#message').html('');
+    return false;
+  });
+  $('select').change(function (){
+    app.roomName = $('select option:selected').text();
+    app.clearMessages();
+    console.log(app.currentData);
+    app.newest = 1;
+    app.display(app.currentData);
+  });
+  $('#chats').on('click', '.username', function() { 
+      app.addFriend($(this).text());
+  });
+});
+      
 var app = {
   friendList: [],
+  currentData: 'x',
   server: 'https://api.parse.com/1/classes/messages',
-  sending: false,
+  date: new Date(),
+  rooms: [],
+  roomName : 'lobby',
   init: function() {
-    $('.username').click(function() {app.addFriend($(this).text())});
-    this.handleSubmit();
+    setInterval(this.fetch, 1000);
+    // this.handleSubmit();
   },
-  handleSubmit: function(text) {
-    $('#send').submit(function() {
-      if(!app.sending) {
-        app.sending = true;
-        app.send(text);
-        app.sending = false}
-      });
+  // handleSubmit: function() {
+  //   $('#send').click(function() {
+  //       console.log(this);
+  //       app.send({'username': window.username, 'text': $('#message').html()});
+  //       $('#message').html('');
+  //       return false;
+  //     });
+  // },
+  newest: 1,
+  display: function(chats) {
+    for (var i = chats.results.length - 1; i >= 0; i--) {
+      if (new Date(chats.results[i].createdAt) > new Date(this.newest)) {
+        if(this.roomName === chats.results[i].roomname) {
+          this.addMessage(chats.results[i]);
+        }
+      }
+    }
+    this.newest = chats.results[0].createdAt;
   },
   send: function(message) {
+    console.log(message);
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
       url: app.server,
@@ -39,7 +73,16 @@ var app = {
       type: 'GET',
       contentType: 'application/json',
       success: function(data) {
-        console.log(data);
+        app.currentData = data;
+        app.display(data);
+        for(var i = 0; i < data.results.length; i++) {
+
+          if(app.rooms.indexOf(data.results[i].roomname) === -1) {
+            app.rooms.push(data.results[i].roomname);
+            console.log(data.results[i]);
+          $('select').append('<option>' + data.results[i].roomname + '</option>');
+          }
+        }
       },
       error: function(data) {
         // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -52,20 +95,39 @@ var app = {
     $('#chats').html('');
   },
   addMessage: function(message) {
-    $('#chats').append(`<div class=chat><span class = username>${message.username}</span> <span class = message>: ${message.text} </span></div>`)
+    var usr = '';
+    for (var i = 0; i < message.username.length; i++) {
+      if (message.username[i] !== ' ') {
+        usr += message.username[i];
+      }
+    }
+    $('#chats').prepend('<div class="chat ' + app.roomName  + ' ' + this.removeSpaces(message.username) +'"><span class = username>' +  window.escapeHtml(message.username) + '</span> <span class = message>' + window.escapeHtml(message.text) + '</span><span>' + window.escapeHtml(message.roomname) + '</span></div>');
   },
   addRoom: function(room) {
     return $('#roomSelect').append(`<div class=room> ${room} </div>`);
   },
   addFriend: function(friend) {
-    if(this.friendList.indexOf(friend) === -1) 
+    if(this.friendList.indexOf(friend) === -1) {
       this.friendList.push(friend);
+      $('.' + this.removeSpaces(friend)).addClass('friend');
+    } else {
+      app.friendList.splice(app.friendList.indexOf(friend), 1);
+      $('.' + this.removeSpaces(friend)).removeClass('friend');
+    }
     return this.friendList;
   },
+  removeSpaces: function(str) {
+    var usr = '';
+    for (var i = 0; i < str.length; i++) {
+      if (str[i] !== ' ') {
+        usr += str[i];
+      }
+    }
+    return usr;
+  }
 };
 
-
-
+app.init();
 
 
 
@@ -102,15 +164,20 @@ var app = {
 
 
 
+ var entityMap = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': '&quot;',
+    "'": '&#39;',
+    "/": '&#x2F;'
+  };
 
-// var escapeString = function(str) {
-//   escapeCharacters = ['<', '>', '\\', '\/', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '{', '}', '[', ']', '|', '~', '`', '?'];
-//   for (var i = 0; i < escapeCharacters.length; i++);
-//   var result = str.replace(`/${escapeCharacters[i]}/g`, `${escapeCharacters[i]}`);
-//   console.dir(JSON.stringify(str));
-//   console.dir(JSON.stringify(result));
-//   return result;
-// }
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'\/]/g, function (s) {
+      return entityMap[s];
+    });
+  }
 
 // var app = {};
 
@@ -229,8 +296,8 @@ var app = {
 
 
 //PARSE POSTING API :
-// var message = {
-//   username: 'shawndrost',
-//   text: 'trololo',
-//   roomname: '4chan'
-// };
+var message = {
+  username: 'shawndrost',
+  text: 'trololo',
+  roomname: '4chan'
+};
